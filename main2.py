@@ -80,8 +80,8 @@ if __name__ == '__main__':
     batch4_path = "./cifar-10-python/cifar-10-batches-py/data_batch_4"
     batch5_path = "./cifar-10-python/cifar-10-batches-py/data_batch_5"
     test_path = "./cifar-10-python/cifar-10-batches-py/test_batch"
-    #paths = [batch1_path, batch2_path, batch3_path, batch4_path, batch5_path]
-    paths = [batch1_path]
+    paths = [batch1_path, batch2_path, batch3_path, batch4_path, batch5_path]
+    #paths = [batch1_path]
     tmp_data, labels = gather_data(paths)
     test_data_orig = unpickle(test_path)[b'data']
     test_labels = unpickle(test_path)[b'labels']
@@ -90,8 +90,8 @@ if __name__ == '__main__':
     data = center(np.transpose(turnGrey(tmp_data)))
         #now every data point (image) is a column & the matrix is centered
     print(data.shape)
-    s_vals = [20]
-    k_vals = [5]
+    s_vals = [1, 5, 20, 55, 100, 500, 1000]
+    k_vals = [1, 5, 10, 55, 100, 360]
     errors = np.zeros((len(k_vals), len(s_vals)))
     svd = np.linalg.svd(data)
     for i in range(len(s_vals)):
