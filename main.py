@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 
-image = Image.open("Q6_pic.jpg")
+image = Image.open("q6_files/Q6_pic.jpg")
 pix = np.array(image)
 print(pix.shape)
 red = pix[:, :, 0].astype('uint8')
@@ -25,8 +25,10 @@ def calcLowRank(k, U, S, V):
     return np.matmul(Uk, result)
 
 
+
 k_vals=[260, 200, 120, 100, 70, 50, 30, 10, 2]
 errors = np.zeros(len(k_vals))
+sSquare = pow(np.array(S1), 2)
 for i in range(len(k_vals)):
     redK = calcLowRank(k_vals[i], U1, S1, V1)
     blueK = calcLowRank(k_vals[i], U2, S2, V2)
@@ -36,7 +38,7 @@ for i in range(len(k_vals)):
     new_image[:, :, 1] = blueK
     new_image[:, :, 2] = greenK
     finalImage = Image.fromarray(new_image.astype('uint8'))
-    errors[i] = (S1[k_vals[i]+1])/(S1[0])
+    errors[i] = sum(sSquare[k_vals[i]+1:])/sum(sSquare)
     finalImage.save("pinkOnWednesday_" + str(k_vals[i]) + "_" + str("{:.5f}".format(errors[i])) + ".png")
 
 k_min = 50

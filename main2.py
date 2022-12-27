@@ -20,12 +20,9 @@ def center(X):
     return Xcentered
 
 
-def getPCA(X, s):
-    svd = np.linalg.svd(X)
-    U = svd[0][:, 0:s]
-    Ut = np.transpose(U)
-    tmp = np.matmul(Ut, X)
-    Xs = np.matmul(U, tmp)
+def reductDim(X, U, s):
+    Ut = np.transpose(U[:, 0:s])
+    Xs = np.matmul(Ut, X)
     return Xs
 
 
@@ -53,8 +50,8 @@ def gather_data(paths):
     if len(paths) == 0:
         return
     if len(paths) == 1:
-        full_data = unpickle(paths)[b'data']
-        full_labels = unpickle(paths)[b'labels']
+        full_data = unpickle(paths[0])[b'data']
+        full_labels = unpickle(paths[0])[b'labels']
     else:
         full_data = unpickle(paths[0])[b'data']
         full_labels = unpickle(paths[0])[b'labels']
@@ -66,6 +63,16 @@ def gather_data(paths):
     return full_data, np.asarray(full_labels)
 
 
+def KNN(y, X_data, X_labels, k):
+    tmp = (X_data.transpose() - y).transpose()
+    distances = np.linalg.norm(tmp, axis=0)
+    labeled = np.row_stack((distances, X_labels.T))
+    sorted_labeled = labeled[:, labeled[0].argsort()]
+    nearest_labels = np.asarray(sorted_labeled[1, 0:k], dtype='int')
+    label_y = np.bincount(nearest_labels).argmax()
+    return label_y
+
+
 if __name__ == '__main__':
     batch1_path = "./cifar-10-python/cifar-10-batches-py/data_batch_1"
     batch2_path = "./cifar-10-python/cifar-10-batches-py/data_batch_2"
@@ -73,13 +80,28 @@ if __name__ == '__main__':
     batch4_path = "./cifar-10-python/cifar-10-batches-py/data_batch_4"
     batch5_path = "./cifar-10-python/cifar-10-batches-py/data_batch_5"
     test_path = "./cifar-10-python/cifar-10-batches-py/test_batch"
-    paths = [batch1_path, batch2_path, batch3_path, batch4_path, batch5_path]
+    #paths = [batch1_path, batch2_path, batch3_path, batch4_path, batch5_path]
+    paths = [batch1_path]
     tmp_data, labels = gather_data(paths)
+    test_data_orig = unpickle(test_path)[b'data']
+    test_labels = unpickle(test_path)[b'labels']
+    test_data_grey = turnGrey(test_data_orig)
+    test_data = center(np.transpose(test_data_grey))
     data = center(np.transpose(turnGrey(tmp_data)))
         #now every data point (image) is a column & the matrix is centered
     print(data.shape)
-    s = 800
-    dataS = getPCA(data, s)
-    print(dataS.shape)
+    s_vals = [20]
+    k_vals = [5]
+    errors = np.zeros((len(k_vals), len(s_vals)))
+    svd = np.linalg.svd(data)
+    for i in range(len(s_vals)):
+        dataS = reductDim(data, svd[0], s_vals[i])
+        testS = reductDim(test_data, svd[0], s_vals[i])
+        for j in range(len(k_vals)):
+            y_labels = []
+            for h in range(testS.shape[1]):
+                y_labels.append(KNN(testS[:, h], dataS, labels, k_vals[j]))
+            errors[j, i] = np.sum(np.asarray(y_labels) != np.asarray(test_labels))/len(y_labels)
+            #the error for some s_vals[i] & k_vals[j] is in row j, col i
 
-
+    print(errors)
