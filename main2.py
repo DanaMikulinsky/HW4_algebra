@@ -24,7 +24,8 @@ def getPCA(X, s):
     svd = np.linalg.svd(X)
     U = svd[0][:, 0:s]
     Ut = np.transpose(U)
-    Xs = np.matmul(np.matmul(U, Ut), X)
+    tmp = np.matmul(Ut, X)
+    Xs = np.matmul(U, tmp)
     return Xs
 
 
@@ -33,7 +34,7 @@ def turnGrey(A):
     turning a color image (represented by a 1-D array)
     to a greyscale image (also represented by a 1-D array)
     """
-    final = np.zeros(A.shape[0], A.shape[1]/3)
+    final = np.zeros((A.shape[0], int(A.shape[1]/3)))
     for i in range(A.shape[0]):
         img = A[i, :]
         img_reshaped = np.transpose(np.reshape(img, (3, 32, 32)), (1, 2, 0))
@@ -45,6 +46,10 @@ def turnGrey(A):
 
 
 def gather_data(paths):
+    """
+    :param paths: a list of paths to the batches
+    :return: 1 full matrix that holds all the pictures and 1 array with the corresponding labels
+    """
     if len(paths) == 0:
         return
     if len(paths) == 1:
@@ -61,7 +66,7 @@ def gather_data(paths):
     return full_data, np.asarray(full_labels)
 
 
-if __name__ == '__main2__':
+if __name__ == '__main__':
     batch1_path = "./cifar-10-python/cifar-10-batches-py/data_batch_1"
     batch2_path = "./cifar-10-python/cifar-10-batches-py/data_batch_2"
     batch3_path = "./cifar-10-python/cifar-10-batches-py/data_batch_3"
@@ -70,5 +75,11 @@ if __name__ == '__main2__':
     test_path = "./cifar-10-python/cifar-10-batches-py/test_batch"
     paths = [batch1_path, batch2_path, batch3_path, batch4_path, batch5_path]
     tmp_data, labels = gather_data(paths)
-    data = turnGrey(tmp_data)
+    data = center(np.transpose(turnGrey(tmp_data)))
+        #now every data point (image) is a column & the matrix is centered
+    print(data.shape)
+    s = 800
+    dataS = getPCA(data, s)
+    print(dataS.shape)
+
 
